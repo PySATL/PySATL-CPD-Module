@@ -79,9 +79,9 @@ class TestCPDShell:
 
     def test_scenario_getter_setter(self) -> None:
         assert self.shell_for_setter_getter.scenario.max_window_cp_number == 10**9
-        assert not self.shell_for_setter_getter.scenario.to_localize
-        self.shell_for_setter_getter.scenario = ScrubberScenario(20, True)
-        assert self.shell_for_setter_getter.cpd_core.scenario == ScrubberScenario(20, True)
+        assert self.shell_for_setter_getter.scenario.to_localize
+        self.shell_for_setter_getter.scenario = ScrubberScenario(20, False)
+        assert self.shell_for_setter_getter.cpd_core.scenario == ScrubberScenario(20, False)
 
     def test_change_scenario(self) -> None:
         self.shell_for_setter_getter.change_scenario(15, True)

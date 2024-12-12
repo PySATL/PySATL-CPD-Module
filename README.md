@@ -13,7 +13,12 @@ At the moment, the module implements the following CPD algorithms:
     * RuLSIF
 * Graph algorithm
 * k-NN based algorithm
-
+* Algorithms, based on classifiers:
+    * SVM
+    * KNN
+    * Decision Tree
+    * Logistic Regression
+    * Random Forest
 ---
 
 ## Requirements

@@ -1,49 +1,44 @@
 """
-Module for implementation of CPD algorithm based on knn classification.
+Module for implementation of CPD algorithm based on classification.
 """
 
 __author__ = "Artemii Patov"
 __copyright__ = "Copyright (c) 2024 Artemii Patov"
 __license__ = "SPDX-License-Identifier: MIT"
 
-import typing as tp
 from collections.abc import Iterable
 
 import numpy as np
 
 from CPDShell.Core.algorithms.abstract_algorithm import Algorithm
+from CPDShell.Core.algorithms.ClassificationBasedCPD.abstracts.iclassifier import Classifier
+from CPDShell.Core.algorithms.ClassificationBasedCPD.abstracts.iquality_metric import QualityMetric
 from CPDShell.Core.algorithms.ClassificationBasedCPD.abstracts.istatistic_test import TestStatistic
-from CPDShell.Core.algorithms.KNNCPD.knn_classifier import KNNClassifier
 
 
-class KNNAlgorithm(Algorithm):
+class ClassificationAlgorithm(Algorithm):
     """
-    The class implementing change point detection algorithm based on k-NN classifier. Works only with non-constant data.
+    The class implementing change point detection algorithm based on classification.
     """
 
     def __init__(
-        self,
-        distance_func: tp.Callable[[float, float], float] | tp.Callable[[np.float64, np.float64], float],
-        test_statistic: TestStatistic,
-        indent_coeff: float,
-        k=7,
-        delta: float = 1e-12,
+        self, classifier: Classifier, quality_metric: QualityMetric, test_statistic: TestStatistic, indent_coeff: float
     ) -> None:
         """
-        Initializes a new instance of k-NN based change point detection algorithm.
+        Initializes a new instance of classification based change point detection algorithm.
 
-        :param distance_func: function for calculating the distance between two points in time series.
+        :param classifier: Classifier for sample classification.
+        :param quality_metric: Metric to assess independence of the two samples
+        resulting from splitting the original sample.
         :param test_statistic: Criterion to separate change points from other points in sample.
         :param indent_coeff: Coefficient for evaluating indent from window borders.
         The indentation is calculated by multiplying the given coefficient by the size of window.
-        :param k: number of neighbours in the knn graph relative to each point.
-        Default is 7, which is generally the most optimal value (based on the experiments results).
-        :param delta: delta for comparing float values of the given observations.
         """
+        self.__classifier = classifier
         self.__test_statistic = test_statistic
+        self.__quality_metric = quality_metric
 
         self.__shift_coeff = indent_coeff
-        self.__classifier = KNNClassifier(distance_func, k, delta)
 
         self.__change_points: list[int] = []
         self.__change_points_count = 0
@@ -85,8 +80,6 @@ class KNNAlgorithm(Algorithm):
         if sample_size == 0:
             return
 
-        self.__classifier.classify(window)
-
         # Examining each point.
         # Boundaries are always change points.
         first_point = int(sample_size * self.__shift_coeff)
@@ -94,7 +87,11 @@ class KNNAlgorithm(Algorithm):
         assessments = []
 
         for time in range(first_point, last_point):
-            quality = self.__classifier.assess_barrier(time)
+            train_sample, test_sample = ClassificationAlgorithm.__split_sample(sample)
+            self.__classifier.train(train_sample, int(time / 2))
+            classes = self.__classifier.predict(test_sample)
+
+            quality = self.__quality_metric.assess_barrier(classes, int(time / 2))
             assessments.append(quality)
 
         change_points = self.__test_statistic.get_change_points(assessments)
@@ -102,3 +99,15 @@ class KNNAlgorithm(Algorithm):
         # Shifting change points coordinates according to their place in window.
         self.__change_points = list(map(lambda x: x + first_point, change_points))
         self.__change_points_count = len(change_points)
+
+    # Splits the given sample into train and test samples.
+    # Strategy: even elements goes to the train sample; uneven --- to the test sample
+    # Soon classification algorithm will be more generalized: the split strategy will be one of the parameters.
+    @staticmethod
+    def __split_sample(
+        sample: Iterable[float | np.float64],
+    ) -> tuple[list[list[float | np.float64]], list[list[float | np.float64]]]:
+        train_sample = [[x] for i, x in enumerate(sample) if i % 2 == 0]
+        test_sample = [[x] for i, x in enumerate(sample) if i % 2 != 0]
+
+        return train_sample, test_sample

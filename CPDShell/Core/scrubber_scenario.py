@@ -10,4 +10,4 @@ class ScrubberScenario:
     """
 
     max_window_cp_number: int = 10**9
-    to_localize: bool = False
+    to_localize: bool = True
