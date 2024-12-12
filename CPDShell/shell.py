@@ -1,3 +1,4 @@
+import csv
 import time
 from collections.abc import Iterable, MutableSequence
 from pathlib import Path
@@ -136,6 +137,37 @@ class CPContainer:
             plt.savefig(output_directory.joinpath(Path(name)))
         if to_show:
             plt.show()
+
+    def to_csv(self, file_path: Path) -> None:
+        """Save the CPContainer data to a CSV file.
+
+        :param file_path: Path where the CSV file will be saved
+        """
+        # Ensure the directory exists
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Prepare the data for CSV
+        data_str = ",".join(map(str, self.data))
+        result_str = ",".join(map(str, self.result))
+        expected_result_str = ",".join(map(str, self.expected_result)) if self.expected_result else ""
+
+        # Write to CSV
+        with open(file_path, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["data", "result", "expected_result", "time_sec"])
+            writer.writerow([data_str, result_str, expected_result_str, self.time_sec])
+
+    @classmethod
+    def from_csv(cls, file_path: Path) -> "CPContainer":
+        """Load CPContainer data from a CSV file."""
+        with open(file_path, newline="") as file:
+            reader = csv.DictReader(file)
+            row = next(reader)
+            data = list(map(float, row["data"].split(",")))
+            result = list(map(int, row["result"].split(",")))
+            expected_result = list(map(int, row["expected_result"].split(","))) if row["expected_result"] else None
+            time_sec = float(row["time_sec"])
+            return cls(data=data, result=result, expected_result=expected_result, time_sec=time_sec)
 
 
 class CPDResultsAnalyzer:
