@@ -5,13 +5,9 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  - repo: https://github.com/psf/black
-    rev: 24.2.0
-    hooks:
-      - id: black
-        args: [ "--line-length", "120" ]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.2
+    rev: v0.9.6
     hooks:
       - id: ruff
+        args: [ --fix ]
       - id: ruff-format

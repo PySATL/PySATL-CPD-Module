@@ -45,13 +45,13 @@ poetry install
 ## CPD module usage example:
 
 ```python
-# import needed CPD algorithm from CPDShell.Core
-from CPDShell.Core.algorithms.graph_algorithm import GraphAlgorithm
-from CPDShell.labeled_data import LabeledCPData
-from CPDShell.Core.scrubber_scenario import ScrubberScenario
+# import needed CPD algorithm from pysatl_cpd.core
+from pysatl_cpd.core.algorithms.graph_algorithm import GraphAlgorithm
+from pysatl_cpd.labeled_data import LabeledCPData
+from pysatl_cpd.core.scrubber_scenario import ScrubberScenario
 
 # import shell
-from CPDShell.shell import CPDProblem
+from pysatl_cpd.shell import CPDProblem
 
 # make a shell object
 shell = CPDProblem(ScrubberScenario(10, True), [1] * 100 + [50] * 100 + [100] * 100)
